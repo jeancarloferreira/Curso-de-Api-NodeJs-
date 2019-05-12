@@ -1,3 +1,5 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const commentTypes = `
     type Comment {
         id: ID!
@@ -14,19 +16,14 @@ const commentTypes = `
         post: Int!
     }
 `;
-
+exports.commentTypes = commentTypes;
 const commentQueries = `
     commentsbyPost(postId: ID!, first: Int, offset: Int): [ Comment! ]!
 `;
-
+exports.commentQueries = commentQueries;
 const commentMutations = `
     createComment(input: CommentInput!): Comment
     updatedComment(id: ID!, input: CommentInput!): Comment
     deleteComment(id: ID!):Boolean
 `;
-
-export {
-    commentTypes,
-    commentQueries,
-    commentMutations
-}
+exports.commentMutations = commentMutations;

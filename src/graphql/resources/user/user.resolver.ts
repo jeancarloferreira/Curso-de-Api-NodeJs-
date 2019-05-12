@@ -3,7 +3,11 @@ import { Transaction } from "sequelize";
 
 import { DbConnection } from "../../../interfaces/DbConnectionInterface";
 import { UserInstance } from "../../../models/UserModel";
-import { handleError } from "../../../utils/utils";
+import { handleError, throwError } from "../../../utils/utils";
+import { compose } from "../../composable/composable.resolver";
+import { authResolver, authResolvers } from "../../composable/auth.resolver";
+import { verifyTokenResolver } from "../../composable/verify-token.resolver";
+import { AuthUser } from "../../../interfaces/AuthUserInterface";
 
 
 export const userResolvers = {
@@ -33,10 +37,20 @@ export const userResolvers = {
             return db.User
                 .findById(id)
                 .then((user: UserInstance) => {
-                    if (!user) throw new Error(`User with id ${id} not found!`);
+                    throwError(!user, `User with id ${id} not found!`);
                     return user;
                 }).catch(handleError);     
-        }
+        },
+        
+        currentUser: compose(...authResolvers)((parent, args, {db, authUser}: {db: DbConnection, authUser: AuthUser}, info: GraphQLResolveInfo) => {
+            return db.User
+                .findById(authUser.id)
+                .then((user: UserInstance) => {
+
+                    return user;
+                }).catch(handleError);
+        })
+
     },
 
     Mutation: {
@@ -47,44 +61,41 @@ export const userResolvers = {
             }).catch(handleError); 
         },
 
-        updateUser: (parent, {id, input}, {db}: {db: DbConnection}, info: GraphQLResolveInfo) => {
-            id = parseInt(id);
+        updateUser: compose(...authResolvers)((parent, {input}, {db, authUser}: {db: DbConnection, authUser: AuthUser}, info: GraphQLResolveInfo) => {
             return db.sequelize.transaction((t: Transaction) => {
                 return db.User
-                    .findById(id)
+                    .findById(authUser.id)
                     .then((user: UserInstance) => {
-                        if(!user) throw new Error(`User with id ${id} not found!`);
+                        throwError(!user, `User with id ${authUser.id} not found!`);
                         return user.update(input, {transaction: t});
                     });
             }).catch(handleError);
-        },
+        }),
 
-        updateUserPassword: (parent, {id, input}, {db}: {db: DbConnection}, info: GraphQLResolveInfo) => {
-            id = parseInt(id);
+        updateUserPassword: compose(...authResolvers)((parent, {input}, {db, authUser}: {db: DbConnection, authUser: AuthUser}, info: GraphQLResolveInfo) => {
             return db.sequelize.transaction((t: Transaction) => {
                 return db.User
-                    .findById(id)
+                    .findById(authUser.id)
                     .then((user: UserInstance) => {
-                        if(!user) throw new Error(`User with id ${id} not found!`);
+                        throwError(!user , `User with id ${authUser.id} not found!`);
                         return user.update(input, {transaction: t})
                         .then((user: UserInstance) => !!user);
                     });
             }).catch(handleError);
-        },
+        }),
 
-        deleteUser: (parent, {id, input}, {db}: {db: DbConnection}, info: GraphQLResolveInfo) => {
-            id = parseInt(id);
+        deleteUser: compose(...authResolvers)((parent, {input}, {db, authUser}: {db: DbConnection, authUser: AuthUser}, info: GraphQLResolveInfo) => {
             return db.sequelize.transaction((t: Transaction) => {
                 return db.User
-                    .findById(id)
+                    .findById(authUser.id)
                     .then((user: UserInstance) => {
-                        if(!user) throw new Error(`User with id ${id} not found!`);
+                        throwError(!user , `User with id ${authUser.id} not found!`);
                         return user.destroy({transaction: t})
                         .then(() => true)
                           .catch(() => false)
                     });
             }).catch(handleError);;
-        }
+        })
     }
 
 };
