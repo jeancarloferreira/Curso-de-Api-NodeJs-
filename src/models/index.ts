@@ -13,7 +13,7 @@ if (!db) {
 
     db = {};
 
-    config = Object.assign({operatorsAliases: false}, config);
+    config = Object.assign({operatorsAliases: {$in: Sequelize.Op.in}}, config);
 
     const sequelize: Sequelize.Sequelize = new Sequelize( 
         config.database,
