@@ -5,13 +5,15 @@ const composable_resolver_1 = require("../../composable/composable.resolver");
 const auth_resolver_1 = require("../../composable/auth.resolver");
 exports.commentResolvers = {
     Comment: {
-        post: (comment, args, { db }, info) => {
-            return db.Post
-                .findById(comment.get('post')).catch(utils_1.handleError);
+        post: (comment, args, { db, dataloaders: { postLoader } }, info) => {
+            return postLoader
+                .load(comment.get('post'))
+                .catch(utils_1.handleError);
         },
-        user: (comment, args, { db }, info) => {
-            return db.User
-                .findById(comment.get('user')).catch(utils_1.handleError);
+        user: (comment, args, { db, dataloaders: { userLoader } }, info) => {
+            return userLoader
+                .load(comment.get('user'))
+                .catch(utils_1.handleError);
         }
     },
     Query: {
